@@ -5,14 +5,22 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
+    "build": "webpack --config webpack.config.js",
     "test": "jest"
   },
   "dependencies": {
     "express": "^4.17.1"
   },
   "devDependencies": {
+    "@babel/core": "^7.27.1",
+    "@babel/preset-env": "^7.27.2",
+    "babel-loader": "^10.0.0",
+    "copy-webpack-plugin": "^13.0.0",
     "jest": "^27.0.0",
-    "supertest": "^6.1.6"
+    "supertest": "^6.1.6",
+    "webpack": "^5.99.8",
+    "webpack-cli": "^6.0.1",
+    "webpack-node-externals": "^3.0.0"
   },
   "author": "",
   "license": "ISC"

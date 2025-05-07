@@ -1,38 +1,69 @@
 trigger:
-- main
+  branches:
+    include:
+      - main
+
+parameters:
+  - name: azure_subscription
+    type: string
+    default: "your-default-azure-subscription"
+
+  - name: subscription_id
+    type: string
+    default: "your-default-subscription-id"
+
+  - name: project_prefix
+    type: string
+    default: "nodeapp"
+
+  - name: location
+    type: string
+    default: "australiaeast"
+
+  - name: sku
+    type: string
+    default: "F1"
 
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: "ubuntu-latest"
 
 steps:
-- task: NodeTool@0
-  inputs:
-    versionSpec: '14.x'
-  displayName: 'Install Node.js'
+  - task: UseNode@1
+    inputs:
+      version: "22.x"
+    displayName: "Install Node.js"
 
-- script: |
-    npm install
-  displayName: 'Install dependencies'
+  - script: |
+      npm clean-install
+    displayName: "Install dependencies"
 
-- script: |
-    npm test
-  displayName: 'Run tests'
+  - script: |
+      npm test
+    displayName: "Run tests"
 
-- script: |
-    npm run build
-  displayName: 'Build the project'
+  - script: |
+      npm run build
+    displayName: "Build project"
 
-- task: TerraformInstaller@0
-  inputs:
-    terraformVersion: 'latest'
-  displayName: 'Install Terraform'
+  # Install extension from https://marketplace.visualstudio.com/items?itemName=ms-devlabs.custom-terraform-tasks
+  - task: TerraformInstaller@1
+    displayName: "Install Terraform"
+    inputs:
+      terraformVersion: "latest"
 
-- script: |
-    cd terraform
-    terraform init
-    terraform apply -auto-approve
-  displayName: 'Configure infrastructure with Terraform'
+  - script: |
+      cd terraform
+      export TF_VAR_subscription_id='${{ parameters.subscription_id }}'
+      export TF_VAR_project_prefix='${{ parameters.project_prefix }}'
+      export TF_VAR_location='${{ parameters.location }}'
+      export TF_VAR_sku='${{ parameters.sku }}'
+      terraform init
+      terraform apply -auto-approve
+    displayName: "Configure infrastructure with Terraform"
 
-- script: |
-    az webapp deployment source config --name <YourAppServiceName> --resource-group <YourResourceGroupName> --repo-url $(Build.Repository.Uri) --branch $(Build.SourceBranchName) --manual-integration
-  displayName: 'Deploy to Azure App Service'
+  - task: AzureWebApp@1
+    displayName: "Deploy to Azure Web App"
+    inputs:
+      azureSubscription: $(azure_subscription)
+      appName: nodeapp
+      package: $(System.DefaultWorkingDirectory)/dist

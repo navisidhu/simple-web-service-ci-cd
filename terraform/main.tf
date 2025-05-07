@@ -1,37 +1,32 @@
-resource "azurerm_resource_group" "example" {
-  name     = "example-resources"
-  location = "East US"
+module "naming" {
+  source  = "Azure/naming/azurerm"
+  prefix = [ var.project_prefix ]
+  suffix = [ "test" ]
+}
+resource "azurerm_resource_group" "rg" {
+  name     = module.naming.resource_group.name
+  location = var.location
 }
 
-resource "azurerm_app_service_plan" "example" {
-  name                = "example-app-service-plan"
-  location            = azurerm_resource_group.example.location
-  resource_group_name = azurerm_resource_group.example.name
-  sku {
-    tier     = "Basic"
-    size     = "B1"
-  }
+resource "azurerm_service_plan" "sp" {
+  name                = module.naming.app_service_plan.name
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  sku_name = "F1"
+  os_type = "Linux"
 }
 
-resource "azurerm_app_service" "example" {
-  name                = "example-app-service"
-  location            = azurerm_resource_group.example.location
-  resource_group_name = azurerm_resource_group.example.name
-  app_service_plan_id = azurerm_app_service_plan.example.id
-
-  app_settings = {
-    "WEBSITE_NODE_DEFAULT_VERSION" = "14"
-  }
+resource "azurerm_app_service" "as" {
+  name                = module.naming.app_service.name
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  app_service_plan_id = azurerm_service_plan.sp.id
 }
 
-resource "azurerm_storage_account" "example" {
-  name                     = "examplestoracc"
-  resource_group_name      = azurerm_resource_group.example.name
-  location                 = azurerm_resource_group.example.location
+resource "azurerm_storage_account" "sa" {
+  name                     = module.naming.storage_account.name
+  resource_group_name      = azurerm_resource_group.rg.name
+  location                 = azurerm_resource_group.rg.location
   account_tier            = "Standard"
   account_replication_type = "LRS"
-}
-
-output "app_service_url" {
-  value = azurerm_app_service.example.default_site_hostname
 }

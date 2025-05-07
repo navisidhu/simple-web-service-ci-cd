@@ -1,10 +1,9 @@
-variable "app_service_name" {
-  description = "The name of the Azure App Service"
+variable "subscription_id" {
+  description = "The Azure subscription ID"
   type        = string
 }
-
-variable "resource_group_name" {
-  description = "The name of the Azure Resource Group"
+variable "project_prefix" {
+  description = "Prefix for all resources"
   type        = string
 }
 
