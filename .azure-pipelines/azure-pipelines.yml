@@ -1,0 +1,38 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- task: NodeTool@0
+  inputs:
+    versionSpec: '14.x'
+  displayName: 'Install Node.js'
+
+- script: |
+    npm install
+  displayName: 'Install dependencies'
+
+- script: |
+    npm test
+  displayName: 'Run tests'
+
+- script: |
+    npm run build
+  displayName: 'Build the project'
+
+- task: TerraformInstaller@0
+  inputs:
+    terraformVersion: 'latest'
+  displayName: 'Install Terraform'
+
+- script: |
+    cd terraform
+    terraform init
+    terraform apply -auto-approve
+  displayName: 'Configure infrastructure with Terraform'
+
+- script: |
+    az webapp deployment source config --name <YourAppServiceName> --resource-group <YourResourceGroupName> --repo-url $(Build.Repository.Uri) --branch $(Build.SourceBranchName) --manual-integration
+  displayName: 'Deploy to Azure App Service'
